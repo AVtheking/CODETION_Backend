@@ -16,8 +16,10 @@ export const auth = async (req: any, res: Response, next: NextFunction) => {
         if (err) {
           return next(new ErrorHandler(401, "Token is not valid"));
         }
-        const id = (payload as { id: string }).id;
+        console.log(payload);
+        const id = (payload as { user_id: string }).user_id;
         req.user = id;
+        next();
       }
     );
   } catch (err: unknown) {

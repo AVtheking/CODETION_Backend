@@ -4,11 +4,18 @@ import { prisma } from "../utils/db";
 
 export const problemController = {
   createProblem: async (req: any, res: any, next: any) => {
+    console.log("here");
     try {
+        console.log(req.user);
       const userId = req.user;
-      const { title, description, difficulty, sampleTestCase, time, memory } =
+      let { title, description, difficulty, sampleTestCase, time, memory } =
         req.body;
+      time = parseInt(time);
+      memory = parseInt(memory);
       const testCaseFilePath = req.file.path;
+      //   console.log(testCaseFilePath);
+      const sample = JSON.parse(sampleTestCase);
+
       const testCases: TestCaseInput[] = parseTestCases(
         fs.readFileSync(testCaseFilePath, "utf-8")
       );
@@ -18,14 +25,19 @@ export const problemController = {
           title,
           description,
           difficulty,
-          sampleTestCase,
-          time,
-          memory,
-          author: {
-            connect: {
-              id: userId,
+          sampleTestCase: {
+            create: {
+              input: sample.input,
+              output: sample.output,
             },
           },
+          time,
+          memory,
+        //   author: {
+        //     connect: {
+        //       id: userId,
+        //     },
+        //   },
 
           testCases: {
             createMany: {
@@ -39,6 +51,7 @@ export const problemController = {
       });
       return res.status(201).json(problem);
     } catch (err: unknown) {
+      fs.unlinkSync(req.file.path);
       next(err);
     }
   },
@@ -87,6 +100,7 @@ function parseTestCases(fileContent: string): TestCaseInput[] {
     const testCaseInputs: TestCaseInput[] = testCases.map(
       ({ input, output }) => ({ input, output })
     );
+    console.log(testCaseInputs);
     return testCaseInputs;
   } catch (error: unknown) {
     console.log("Error parsing test cases");

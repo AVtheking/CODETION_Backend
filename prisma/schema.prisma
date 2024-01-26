@@ -36,14 +36,14 @@ model Problem {
   id             Int        @id @default(autoincrement())
   title          String
   description    String
-  authorId       Int
-  author         User       @relation(fields: [authorId], references: [id])
+  authorId       Int?
+  author         User?       @relation(fields: [authorId], references: [id])
   difficulty     String
   tags           String[]
-  sampleTestCase String
+  sampleTestCase TestCase?  @relation("sample")
   time           Int
   memory         Int
-  testCases      TestCase[]
+  testCases      TestCase[] @relation("testCase")
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
 
@@ -51,11 +51,13 @@ model Problem {
 }
 
 model TestCase {
-  id        Int     @id @default(autoincrement())
-  problemId Int
-  input     String
-  output    String
-  problem   Problem @relation(fields: [problemId], references: [id])
+  id              Int      @id @default(autoincrement())
+  problemId       Int?
+  sampleProblemId Int?     @unique
+  input           String
+  output          String
+  problem         Problem? @relation("testCase", fields: [problemId], references: [id])
+  sampleProblem   Problem? @relation("sample", fields: [sampleProblemId], references: [id])
 
   @@map("test_cases")
 }

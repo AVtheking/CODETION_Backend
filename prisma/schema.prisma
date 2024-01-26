@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider {
+  email
+  google
+}
+
+model User {
+  id           Int          @id @default(autoincrement())
+  email        String       @unique
+  name         String?
+  password     String
+  isSuperUser  Boolean      @default(false) @map("is_super_user")
+  isActive     Boolean      @default(true) @map("is_active")
+  isVerified   Boolean      @default(false) @map("is_verified")
+  isStaff      Boolean      @default(false) @map("is_staff")
+  dateJoined   DateTime     @default(now()) @map("date_joined")
+  lastLogin    DateTime     @default(now()) @map("last_login")
+  authProvider AuthProvider @default(email) @map("auth_provider")
+  problems     Problem[]
+
+  @@map("users")
+}
+
+model Problem {
+  id             Int        @id @default(autoincrement())
+  title          String
+  description    String
+  authorId       Int?
+  author         User?       @relation(fields: [authorId], references: [id])
+  difficulty     String
+  tags           String[]
+  sampleTestCase TestCase?  @relation("sample")
+  time           Int
+  memory         Int
+  testCases      TestCase[] @relation("testCase")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@map("problems")
+}
+
+model TestCase {
+  id              Int      @id @default(autoincrement())
+  problemId       Int?
+  sampleProblemId Int?     @unique
+  input           String
+  output          String
+  problem         Problem? @relation("testCase", fields: [problemId], references: [id])
+  sampleProblem   Problem? @relation("sample", fields: [sampleProblemId], references: [id])
+
+  @@map("test_cases")
+}

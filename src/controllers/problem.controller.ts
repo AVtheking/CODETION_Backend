@@ -1,14 +1,18 @@
 import fs from "fs";
 import { TestCaseInput } from "../types/types";
 import { prisma } from "../utils/db";
+import { problemSchema } from "../utils/validation";
 
 export const problemController = {
   createProblem: async (req: any, res: any, next: any) => {
     try {
       console.log(req.user);
       const userId = req.user;
+
+      const result = await problemSchema.validateAsync(req.body);
       let { title, description, difficulty, sampleTestCase, time, memory } =
-        req.body;
+        result;
+
       time = parseInt(time);
       memory = parseInt(memory);
       const testCaseFilePath = req.file.path;
@@ -61,9 +65,9 @@ export const problemController = {
           testCases: true,
         },
       });
-        return res.json({
-            success: true,
-            problems,
+      return res.json({
+        success: true,
+        problems,
       });
     } catch (err: unknown) {
       next(err);

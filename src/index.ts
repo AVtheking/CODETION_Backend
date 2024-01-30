@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import { errorMiddleware } from "./middlewares/error";
 import { problemRouter } from "./routes/problem.route";
+
 const app = express();
 const port = 9999;
 app.get("/", (req, res) => {

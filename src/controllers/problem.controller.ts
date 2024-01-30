@@ -52,7 +52,10 @@ export const problemController = {
           testCases: true,
         },
       });
-      return res.status(201).json(problem);
+      return res.status(201).json({
+        success: true,
+        problem,
+      });
     } catch (err: unknown) {
       fs.unlinkSync(req.file.path);
       next(err);

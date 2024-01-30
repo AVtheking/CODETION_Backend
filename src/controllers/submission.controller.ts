@@ -8,23 +8,27 @@ const submissionQueue = new Queue("submissionQueue", {
   connection: { host: redisHost, port: redisPort },
 });
 const submissionCtrl = {
-  createSubmissiom: async (req: any, res: Response, next: NextFunction) => {
+  createSubmissiom: async (req: any, res: any, next: NextFunction) => {
     try {
       const { code, language, input, problemId } = req.body;
-      const newSubmission = await prisma.submission.create({
+    const newSubmission = await prisma.submission.create({
         data: {
-          code,
-          language,
-          input,
-          problem: { connect: { id: problemId } },
+            code,
+            language,
+            input,
+            problem: { connect: { id: problemId } },
         },
-      });
-      await submissionQueue.add("submission", {
+    });
+    await submissionQueue.add("submission", {
         code,
         language,
         input,
         problemId,
-      });
+    });
+    res.json({
+        success: true,
+        submission: newSubmission,
+    });
     } catch (e: unknown) {
       next(e);
     }

@@ -19,7 +19,6 @@ const fileFilter = (req: any, file: any, cb: any) => {
     cb(null, true);
   } else {
     return cb(
-  
       new ErrorHandler(400, "Only .txt and .json format allowed!"),
       false
     );
@@ -28,4 +27,4 @@ const fileFilter = (req: any, file: any, cb: any) => {
 export const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-}).single("testCase");
+}).array("testCase", 2);

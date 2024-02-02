@@ -1,4 +1,5 @@
 import fs from "fs";
+import readline from "readline";
 import { TestCaseInput } from "../types/types";
 import { prisma } from "../utils/db";
 import { problemSchema } from "../utils/validation";
@@ -7,7 +8,7 @@ export const problemController = {
   createProblem: async (req: any, res: any, next: any) => {
     try {
       console.log(req.user);
-      const userId = req.user;
+      const userId = req.user._id;
 
       const result = await problemSchema.validateAsync(req.body);
       let { title, description, difficulty, sampleTestCase, time, memory } =
@@ -15,13 +16,26 @@ export const problemController = {
 
       time = parseInt(time);
       memory = parseInt(memory);
-      const testCaseFilePath = req.file.path;
+      const inputFilePath = req.files[0].path;
+      const outputFilePath = req.files[1].path;
+      console.log(inputFilePath);
+      console.log(outputFilePath);
+      const inputLines = await readlines(inputFilePath);
+      const outputLines = await readlines(outputFilePath);
+      const testCases: TestCaseInput[] = inputLines.map(
+        (input, index) => ({
+          input,
+          output: outputLines[index],
+        })
+      );
+
+      // const testCaseFilePath = req.file.path;
 
       const sample = JSON.parse(sampleTestCase);
 
-      const testCases: TestCaseInput[] = parseTestCases(
-        fs.readFileSync(testCaseFilePath, "utf-8")
-      );
+      // const testCases: TestCaseInput[] = parseTestCases(
+      //   fs.readFileSync(testCaseFilePath, "utf-8")
+      // );
 
       const problem = await prisma.problem.create({
         data: {
@@ -36,11 +50,11 @@ export const problemController = {
           },
           time,
           memory,
-          //   author: {
-          //     connect: {
-          //       id: userId,
-          //     },
-          //   },
+          author: {
+            connect: {
+              id: userId,
+            },
+          },
 
           testCases: {
             createMany: {
@@ -124,3 +138,15 @@ function parseTestCases(fileContent: string): TestCaseInput[] {
     return [];
   }
 }
+const readlines = async (filePath: string): Promise<string[]> => {
+  const lines: string[] = [];
+  const fileStream = fs.createReadStream(filePath);
+  const r1 = readline.createInterface({
+    input: fileStream,
+    crlfDelay: Infinity,
+  });
+  for await (const line of r1) {
+    lines.push(line);
+  }
+  return lines;
+};

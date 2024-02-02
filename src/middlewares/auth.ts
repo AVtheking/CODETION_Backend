@@ -1,5 +1,6 @@
 import { NextFunction, Response } from "express";
 import jwt, { Secret } from "jsonwebtoken";
+import { prisma } from "../utils/db";
 import { ErrorHandler } from "./error";
 
 export const auth = async (req: any, res: Response, next: NextFunction) => {
@@ -15,10 +16,14 @@ export const auth = async (req: any, res: Response, next: NextFunction) => {
       async (err: any, payload: any) => {
         if (err) {
           return next(new ErrorHandler(401, "Token is not valid"));
-        }
+        } 
         console.log(payload);
-        const id = (payload as { user_id: string }).user_id;
-        req.user = id;
+        const id = (payload as { user_id: number }).user_id;
+        const user = await prisma.user.findUnique({ where: { id } });
+        if (!user) {
+          return next(new ErrorHandler(404, "User not found"));
+        }
+        req.user = user;
         next();
       }
     );
